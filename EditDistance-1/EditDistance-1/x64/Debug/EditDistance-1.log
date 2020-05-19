@@ -1,0 +1,19 @@
+﻿  EditDistance-1.cpp
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(115,12): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(115,12): message : consider using '%zd' in the format string
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(115,12): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(115,12): message : consider using '%zd' in the format string
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(40,28): warning C4101: 'result': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(37,15): warning C4101: 'kernel': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(52,23): warning C4101: 'sub_buffer': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(42,22): warning C4101: 'vec_buff': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(43,12): warning C4101: 'work_units_per_kernel': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(40,20): warning C4101: 'vec': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(56,23): warning C4101: 'm_N': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(42,12): warning C4101: 'mat_buff': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(42,32): warning C4101: 'res_buff': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(40,11): warning C4101: 'mat': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(30,12): warning C4101: 'i': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(260,9): warning C4101: 'test': unreferenced local variable
+C:\Users\vishal\source\repos\EditDistance-1\EditDistance-1\EditDistance-1.cpp(57,23): warning C4101: 'm_N_padded': unreferenced local variable
+  EditDistance-1.vcxproj -> C:\Users\vishal\source\repos\EditDistance-1\x64\Debug\EditDistance-1.exe

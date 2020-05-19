@@ -1,0 +1,10 @@
+﻿  SuffixArrays.cpp
+  cl2.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 200 (OpenCL 2.0)
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(46,34): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(257,8): warning C4101: 'a': unreferenced local variable
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(256,19): warning C4101: 'infile2': unreferenced local variable
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(257,13): warning C4101: 'b': unreferenced local variable
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(251,12): warning C4101: 'm_N': unreferenced local variable
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(252,12): warning C4101: 'm_N_padded': unreferenced local variable
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(287,10): warning C4101: 't': unreferenced local variable
+  SuffixArrays.vcxproj -> C:\Users\vishal\source\repos\SuffixArrays\x64\Debug\SuffixArrays.exe

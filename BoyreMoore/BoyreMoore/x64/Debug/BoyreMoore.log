@@ -1,0 +1,8 @@
+﻿  BoyreMoore.cpp
+  cl2.hpp: CL_HPP_TARGET_OPENCL_VERSION is not defined. It will default to 200 (OpenCL 2.0)
+C:\Users\vishal\source\repos\BoyreMoore\BoyreMoore\BoyreMoore.cpp(92,22): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\vishal\source\repos\BoyreMoore\BoyreMoore\BoyreMoore.cpp(93,22): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\vishal\source\repos\BoyreMoore\BoyreMoore\BoyreMoore.cpp(160,26): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\vishal\source\repos\BoyreMoore\BoyreMoore\BoyreMoore.cpp(265,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\vishal\source\repos\BoyreMoore\BoyreMoore\BoyreMoore.cpp(239,10): warning C4101: 't': unreferenced local variable
+  BoyreMoore.vcxproj -> C:\Users\vishal\source\repos\BoyreMoore\x64\Debug\BoyreMoore.exe

@@ -1,0 +1,2 @@
+﻿  SuffixArrays.cpp
+C:\Users\vishal\source\repos\SuffixArrays\SuffixArrays\SuffixArrays.cpp(2,10): fatal error C1083: Cannot open include file: 'CL/cl2.hpp': No such file or directory
