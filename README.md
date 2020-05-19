@@ -1,8 +1,8 @@
 # Accelerated String Matching Algorithms
 ## Contents:
-1) Boyer-Moore String Matching algorithm: Serial and Parallel
+1) Boyer-Moore String Matching algorithm: Serial and Parallel Implementation
 2) Edit Distance Algorithm: Parallel Implementations in OpenCL
-3) Suffix Arrays : Serial and Parallel
+3) Suffix Arrays : Serial and Parallel Implementation
 
 ## Requirements:
 1) OpenCL library
