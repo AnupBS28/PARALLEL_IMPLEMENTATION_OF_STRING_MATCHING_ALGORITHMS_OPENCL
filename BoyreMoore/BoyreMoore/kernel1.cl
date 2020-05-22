@@ -6,16 +6,11 @@ __kernel void search(__global char *A,__global char *B,__global int *se,__global
   ans[id]=0;
   int k,num;
  
-
-
- 
   int len=sublength; 
  
   int dlen=se[id*2+1];
   int i=se[id*2]+len-1;
-  //printf("\nid=%d len=%d and dlen=%d se1 =%d and se2=%d i=%d ",id,len,dlen,se[id*2],se[id*2+1],i);
-
-
+  
   while(i<=dlen)
   { k=0;
     while(k<=len-1 && A[i-k]==B[len-1-k])
