@@ -23,6 +23,10 @@ int main()
 {
 
     /* Host/device data structures */
+    int iterations=10;
+    float avg_parallelTime=0;
+    for(int i=0;i<iterations;i++){
+
     cl_platform_id platform;
     cl_device_id device;
     cl_context context;
@@ -103,12 +107,12 @@ int main()
     //sizeb = 8;
     a[sizea] = '\0';
     b[sizeb] = '\0';
-    long int str1len = sizea;
-    long int str2len = sizeb;
+    static long int str1len = sizea;
+    static long int str2len = sizeb;
 
     printf("%d %d %d %d\n", str1len, str2len, strlen(a), strlen(b));
 
-    cl_uint input_array[14001][14001];
+    cl_uint input_array[str1len+1][str2len+1];
     //cl_uint** input_array = malloc(sizeof(cl_uint) * (strlen(a)+1));
     clock_t t;
 
@@ -311,7 +315,7 @@ int main()
     time_spent = (double)(end - t) / CLOCKS_PER_SEC;
 
     printf("\n\nEditDist() took %f seconds to execute \n\n", time_spent);
-
+    avg_parallelTime+=time_spent;
     //printf("%d %d \n", strlen(a), strlen(b));
     /*for (int h = 0;h < strlen(b) + 1;h++)
     {
@@ -332,4 +336,8 @@ int main()
     clReleaseProgram(program);
     clReleaseContext(context);
     clReleaseCommandQueue(queue);
+
+    }
+
+    printf("\n\nAverage time :%d",avg_parallelTime/iterations);
 }
