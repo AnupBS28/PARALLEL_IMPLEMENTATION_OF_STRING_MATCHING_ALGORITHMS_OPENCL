@@ -15,7 +15,7 @@
 #define BLOCKSIZE 512
 //#define INDEX(a,b)  (((((a<ARRSIZE)&&(a>=0))&&((b<ARRSIZE)&&(b>=0)))*0xffffffff)&((((a*(a+1))/2)+b)))
 //#define INDEX(a,b)  (((((a<ARRSIZE)&&(a>=0))&&((b<ARRSIZE)&&(b>=0)))*0xffffffff)&(((((a+b)*(a+b+1))/2)+b+1)))
-
+long int ARRSIZE;
 void levenshteinCuda(char* s1, char* s2, int* &result, size_t n);
 
 int getIndex(int i,int j);

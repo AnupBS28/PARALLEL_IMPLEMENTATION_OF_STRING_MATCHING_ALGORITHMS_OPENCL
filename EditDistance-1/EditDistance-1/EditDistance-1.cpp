@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <string.h>
+#include <sys/resource.h>
 #ifdef MAC
 #include <OpenCL/cl.h>
 #else
@@ -21,11 +22,28 @@ size_t GetGlobalWorkSize(size_t DataElemCount, size_t LocalWorkSize)
 }
 int main()
 {
+    const rlim_t kStackSize = 2048L * 2048L * 2048L;   // min stack size = 64 Mb
+    struct rlimit rl;
+    int stack_result;
+
+    stack_result = getrlimit(RLIMIT_STACK, &rl);
+    if (stack_result == 0)
+    {
+        if (rl.rlim_cur < kStackSize)
+        {
+            rl.rlim_cur = kStackSize;
+            stack_result = setrlimit(RLIMIT_STACK, &rl);
+            if (stack_result != 0)
+            {
+                fprintf(stderr, "setrlimit returned result = %d\n", stack_result);
+            }
+        }
+    }
 
     /* Host/device data structures */
-    int iterations=10;
-    float avg_parallelTime=0;
-    for(int i=0;i<iterations;i++){
+    double iterations=10;
+    double avg_parallelTime=0;
+    for(int ii=0;ii<iterations;ii++){
 
     cl_platform_id platform;
     cl_device_id device;
@@ -64,7 +82,7 @@ int main()
     long sizea, sizeb;
 
     infile1 = fopen("str1.txt", "r");
-    infile2 = fopen("str2.txt", "r");
+    infile2 = fopen("str1.txt", "r");
 
     if (infile1 == NULL)
     {
@@ -339,5 +357,5 @@ int main()
 
     }
 
-    printf("\n\nAverage time :%d",avg_parallelTime/iterations);
+    printf("\n\nAverage time :%f \n",avg_parallelTime/iterations);
 }

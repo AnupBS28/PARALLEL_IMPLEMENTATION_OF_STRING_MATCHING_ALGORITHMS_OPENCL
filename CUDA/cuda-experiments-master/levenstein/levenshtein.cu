@@ -29,8 +29,12 @@ __global__ void levenshteinKernel(
         int   size,               /* linear size of the result array          */
         int   blocks,             /* number of blocks instantiated            */
         int   blocksize           /* the size that each block is responsible  */
+         unsigned int*  phase;
  )
 {
+   
+    int blocks = ceil(size / ((float) BLOCKSIZE));
+
     __shared__ char Nds[BLOCKSIZE];   //Shared Nd character memory
     __shared__ int  Rs[BLOCKSIZE];    //Shared current min value memory
     int col = (blockIdx.x * BLOCKSIZE) + (threadIdx.x + 1);      //column
@@ -84,6 +88,9 @@ __global__ void levenshteinKernel(
     }
 }
 
+
+
+
 __host__ void levenshteinCuda(char* s1, char* s2, int* &result, size_t size) {
     //Assumption is made that the size is a multiple of tile size    
     char* Sd;
@@ -110,7 +117,7 @@ __host__ void levenshteinCuda(char* s1, char* s2, int* &result, size_t size) {
     cudaMemset(phase, 0, sizeof(int) * blocks);
 
     levenshteinKernel<<<dimGrid, dimBlock>>>(Sd, Td, Rd, size+1,
-            blocks, BLOCKSIZE);
+            blocks, BLOCKSIZE,phase);
 
     cudaMemcpy(result, Rd, (arrSize * sizeof(int)), cudaMemcpyDeviceToHost);
 

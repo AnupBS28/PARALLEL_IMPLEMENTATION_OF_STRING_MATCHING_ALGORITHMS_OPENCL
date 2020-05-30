@@ -16,9 +16,7 @@ __kernel void search(__global char *A,__global char *B,__global int *se,__global
     while(k<=len-1 && A[i-k]==B[len-1-k])
      k=k+1;
     
-    if(k==len) {
-      printf("\nFound by %d at : %d",id,(i-(len-1))); i=i+1; ans[id]=++occ; continue;  
-      }
+    if(k==len) {printf("\nFound by %d at : %d",id,(i-(len-1))); i=i+1; ans[id]=++occ; continue;  }
 
 
     num = (int)A[i];

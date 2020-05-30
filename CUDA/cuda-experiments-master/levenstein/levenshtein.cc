@@ -14,19 +14,17 @@
 #define DIAGONAL 2
 #define UNDEFINED 255
 
-
 using namespace std;
 
-int           **dist;
-int           *retiled;
-FILE* outfileSequential;
-typedef struct alignm_struct {
-	char            seqelem[2];
-	int             type;
-	int             cost;
-}               alignm_struct;
-
-
+int **dist;
+int *retiled;
+FILE *outfileSequential;
+typedef struct alignm_struct
+{
+    char seqelem[2];
+    int type;
+    int cost;
+} alignm_struct;
 
 int min3(int a, int b, int c);
 void alloc_dist_matrix(int m, int n);
@@ -35,168 +33,226 @@ int determine_alignment(char *s, int m, char *t, int n);
 //This function implements a heuristic to determine an alignment
 // from the edit distance matrix
 //
-int __determine_alignment(int i, int j, alignm_struct * alignment);
+int __determine_alignment(int i, int j, alignm_struct *alignment);
 
 int LevenshteinDistance(char *s, int m, char *t, int n);
 
-int retile(char* &c, int n);
-void parallelLevenshtein(char* s1, char* s2, int* &result, int size);
+int retile(char *&c, int n);
+void parallelLevenshtein(char *s1, char *s2, int *&result, int size);
 
-int tiledIndex(int i , int j, int n)
+int tiledIndex(int i, int j, int n)
 {
-	int rval;
-	if(!(i >= 0 && i <=n && j >= 0 && j <=n) ) {
-		rval = 0;
-	} else if((i+j) <= n) {
-		rval = (((i+j)*(i+j+1))/2) + j;
-	} else {
-		rval = ((n+1)*(n+1)) - (((2*(n+1) - (i+j))*(2*(n+1) - (i+j+1)))/2) +
-			(j - ((j+i) - (n+1))) - 1;
-	}
-	return rval;
-}	
-
-int main( int argc, char** argv ) {
-    //cudaSetDevice(1);
-    int             dist;
-    char           *s;
-    char           *t;
-    int             m;
-    int             n;
-    int             i;
-    char*           s1 = new char[1024];
-    char*           s2 = new char[1024];
-    int*           parallelDist;
-    retiled = new int[(ARRSIZE +1) * (ARRSIZE + 1)];
-
-    s = s1;
-    t = s2;
-
-    memset(s1, 0, sizeof(char) * ARRSIZE);
-    memset(s2, 0, sizeof(char) * ARRSIZE);
-
-    if( argc < 3) {
-        fprintf(stderr, "Not enough arguments\nUsage: levenstein <infile1> <infile2>\n");
-        exit(EXIT_FAILURE);
+    int rval;
+    if (!(i >= 0 && i <= n && j >= 0 && j <= n))
+    {
+        rval = 0;
     }
+    else if ((i + j) <= n)
+    {
+        rval = (((i + j) * (i + j + 1)) / 2) + j;
+    }
+    else
+    {
+        rval = ((n + 1) * (n + 1)) - (((2 * (n + 1) - (i + j)) * (2 * (n + 1) - (i + j + 1))) / 2) +
+               (j - ((j + i) - (n + 1))) - 1;
+    }
+    return rval;
+}
+long int ARRSIZE;
+int main(int argc, char **argv)
+{
+    //cudaSetDevice(1);
+    double iterations = 10;
+    double avg_time = 0;
+    for (int ii = 0; ii < iterations; ii++)
+    {
 
-    FILE* infile = fopen(argv[1], "r");
-    FILE* modfile = fopen(argv[2], "r");
-    FILE* outfileParallel = fopen("out.parallel", "w");
+        clock_t begin = clock();
+        FILE *infile1, *infile2;
+        int dist;
+        char *s;
+        char *t;
+        int m;
+        char *a, *b;
+        int n;
+        
+        int i;
+        long sizea, sizeb;
+
+        if (argc < 3)
+        {
+            fprintf(stderr, "Not enough arguments\nUsage: levenstein <infile1> <infile2>\n");
+            exit(EXIT_FAILURE);
+        }
+        FILE* outfileParallel = fopen("out.parallel", "w");
     outfileSequential = fopen("out.sequential", "w");
+        infile1 = fopen("str1.txt", "r");
+        infile2 = fopen("str2.txt", "r");
 
-    size_t j = ARRSIZE;
-    size_t k = ARRSIZE;
-
-    getline(&s1, &j, (FILE*) infile);
-    getline(&s2, &k, (FILE*) modfile);
-
-    m = ARRSIZE;
-    n = ARRSIZE;
-
-#ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
-    printf("WARNING! Not using atomics!\n");
-#endif
-
-    parallelDist = new int[(ARRSIZE+1)*(ARRSIZE+1)];
-    memset(parallelDist,0,sizeof(int)*(ARRSIZE+1)*(ARRSIZE+1));
-
-    levenshteinCuda(s2,s1, parallelDist,ARRSIZE);
-
-    for(int row = 0; row <= ARRSIZE;++row) {
-        if( row > 5 )
-            continue;
-            printf("\nRow %.4d\n", row);
-        //fprintf(outfileParallel, "Row %.4d\n", row);
-        for(int col = 0; col <= ARRSIZE;++col) {
-            printf("%.4d\t", parallelDist[tiledIndex(row,col,ARRSIZE)]);
-            fprintf(outfileParallel,"[%d][%d] = %.4d\n", row, col, parallelDist[tiledIndex(row,col,ARRSIZE)]);
+        if (infile1 == NULL)
+        {
+            printf("File Not Found!\n");
+            return -1;
+        }
+        if (infile2 == NULL)
+        {
+            printf("File Not Found!\n");
+            return -1;
         }
 
+        fseek(infile1, 0L, SEEK_END);
+        sizea = ftell(infile1);
+
+        fseek(infile2, 0L, SEEK_END);
+        sizeb = ftell(infile2);
+
+        fseek(infile1, 0L, SEEK_SET);
+        fseek(infile2, 0L, SEEK_SET);
+
+        a = (char *)calloc(sizea + 1, sizeof(char));
+        b = (char *)calloc(sizeb + 1, sizeof(char));
+
+        if (a == NULL)
+            return 1;
+
+        fread(a, sizeof(char), sizea, infile1);
+        fclose(infile1);
+
+        fread(b, sizeof(char), sizeb, infile2);
+        fclose(infile2);
+
+        //char a[7] = "sunday";
+        //char b[9] = "saturday";
+        //long sizea, sizeb;
+        //a[6] = '\0';
+        //b[8] = '\0';
+        //sizea = 6;
+        //sizeb = 8;
+        a[sizea] = '\0';
+        b[sizeb] = '\0';
+
+        size_t j = sizea;
+        size_t k = sizeb;
+        ARRSIZE = sizea;
+        char *s1 = new char[ARRSIZE];
+        char *s2 = new char[ARRSIZE];
+        int *parallelDist;
+        retiled = new int[(ARRSIZE + 1) * (ARRSIZE + 1)];
+
+        s = s1;
+        t = s2;
+
+        memset(s1, 0, sizeof(char) * ARRSIZE);
+        memset(s2, 0, sizeof(char) * ARRSIZE);
+        // getline(&s1, &j, (FILE*) infile);
+        // getline(&s2, &k, (FILE*) modfile);
+        s1 = a;
+        s2 = b;
+        m = ARRSIZE;
+        n = ARRSIZE;
+
+#ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
+        printf("WARNING! Not using atomics!\n");
+#endif
+
+        parallelDist = new int[(ARRSIZE + 1) * (ARRSIZE + 1)];
+        memset(parallelDist, 0, sizeof(int) * (ARRSIZE + 1) * (ARRSIZE + 1));
+
+        levenshteinCuda(s2, s1, parallelDist, ARRSIZE);
+
+        for (int row = 0; row <= ARRSIZE; ++row)
+        {
+            if (row > 5)
+                continue;
+            printf("\nRow %.4d\n", row);
+            //fprintf(outfileParallel, "Row %.4d\n", row);
+            for (int col = 0; col <= ARRSIZE; ++col)
+            {
+                printf("%.4d\t", parallelDist[tiledIndex(row, col, ARRSIZE)]);
+                fprintf(outfileParallel, "[%d][%d] = %.4d\n", row, col, parallelDist[tiledIndex(row, col, ARRSIZE)]);
+            }
+
             printf("\n");
-        
-    }
-    printf("Parallel[%d][%d] = %d\n", ARRSIZE,ARRSIZE, parallelDist[tiledIndex(ARRSIZE,ARRSIZE,ARRSIZE)]);
+        }
+        printf("Parallel[%d][%d] = %d\n", ARRSIZE, ARRSIZE, parallelDist[tiledIndex(ARRSIZE, ARRSIZE, ARRSIZE)]);
 
-    alloc_dist_matrix(m, n);
-    dist = LevenshteinDistance(s, m, t, n);
-   
-    /*printf("Edit Distance of %s and %s = %d\n\n",
-	       s, t, dist);
-
-    determine_alignment(s, m, t, n);
-
-
+        alloc_dist_matrix(m, n);
+        dist = LevenshteinDistance(s, m, t, n);
+        printf("Edit Distance of %s and %s = %d\n\n", s, t, dist);
+        clock_t end = clock();
+        double time_spent = 0.0;
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        avg_time += time_spent;
+        /*determine_alignment(s, m, t, n);
     printf("\n\nSequence Similarity based on [ \"An Information-Theoretic Definition of Similarity\", Dekang Lin, Department of Computer Science, University of Manitoba]:\n\n");
     printf("Similariy = sim(x,y) = 1/( 1 + editDist(x,y)) = %f\n", 1.0/(1.0 + (float)dist));
-
     destroy_dist_matrix(m, n);*/
-
-    
+    }
+    cout << "Avg time CUDA :" << avg_time / iterations;
     return EXIT_SUCCESS;
 }
 
-int
-min3(int a, int b, int c)
+int min3(int a, int b, int c)
 {
-	int             min, temp;
+    int min, temp;
 
-	min = MIN(MIN(a, b), MIN(b, c));
+    min = MIN(MIN(a, b), MIN(b, c));
 
-	return min;
+    return min;
 }
 
-void
-alloc_dist_matrix(int m, int n)
+void alloc_dist_matrix(int m, int n)
 {
-	int             i;
-	dist = (int **) malloc(sizeof(int *) * (m + 1));
+    int i;
+    dist = (int **)malloc(sizeof(int *) * (m + 1));
 
-	for (i = 0; i < m + 1; i++)
-		dist[i] = (int *) malloc(sizeof(int) * (n + 1));
+    for (i = 0; i < m + 1; i++)
+        dist[i] = (int *)malloc(sizeof(int) * (n + 1));
 }
 
-void
-destroy_dist_matrix(int m, int n)
+void destroy_dist_matrix(int m, int n)
 {
-	int             i;
-	for (i = 0; i < m + 1; i++)
-		free(dist[i]);
-	free(dist);
+    int i;
+    for (i = 0; i < m + 1; i++)
+        free(dist[i]);
+    free(dist);
 }
 
-int
-determine_alignment(char *s, int m, char *t, int n)
+int determine_alignment(char *s, int m, char *t, int n)
 {
-	alignm_struct   alignment[m + n];
-	int             i, j, k;
+    alignm_struct alignment[m + n];
+    int i, j, k;
 
-	for (i = 0; i < m + n; i++)
-		alignment[i].type = UNDEFINED;
+    for (i = 0; i < m + n; i++)
+        alignment[i].type = UNDEFINED;
 
-	__determine_alignment(m, n, alignment);
+    __determine_alignment(m, n, alignment);
 
+    i = 0;
+    j = 0;
+    for (k = 0; k < m + n; k++)
+    {
+        if (alignment[k].type == UNDEFINED)
+            break;
 
+        if (alignment[k].type == HORIZONTAL)
+        {
+            alignment[k].seqelem[0] = '-';
+            alignment[k].seqelem[1] = t[j++];
+        }
+        else if (alignment[k].type == VERTICAL)
+        {
+            alignment[k].seqelem[0] = s[i++];
+            alignment[k].seqelem[1] = '-';
+        }
+        else if (alignment[k].type == DIAGONAL)
+        {
+            alignment[k].seqelem[0] = s[i++];
+            alignment[k].seqelem[1] = t[j++];
+        }
+    }
 
-	i = 0;
-	j = 0;
-	for (k = 0; k < m + n; k++) {
-		if (alignment[k].type == UNDEFINED)
-			break;
-
-		if (alignment[k].type == HORIZONTAL) {
-			alignment[k].seqelem[0] = '-';
-			alignment[k].seqelem[1] = t[j++];
-		} else if (alignment[k].type == VERTICAL) {
-			alignment[k].seqelem[0] = s[i++];
-			alignment[k].seqelem[1] = '-';
-		} else if (alignment[k].type == DIAGONAL) {
-			alignment[k].seqelem[0] = s[i++];
-			alignment[k].seqelem[1] = t[j++];
-		}
-	}
-
-	/*printf("Alignment Matrix: \n");
+    /*printf("Alignment Matrix: \n");
 
 	for(k = 0; alignment[k].type != UNDEFINED && k < m + n; k++){
 		printf("%c\t", alignment[k].seqelem[0]);
@@ -210,165 +266,178 @@ determine_alignment(char *s, int m, char *t, int n)
 //This function implements a heuristic to determine an alignment
 // from the edit distance matrix
 //
-int
-__determine_alignment(int i, int j, alignm_struct * alignment)
+int __determine_alignment(int i, int j, alignm_struct *alignment)
 {
-	int             vert, horiz, diag;
-	int             min, cost, which;
-	int             alignm_elem;
+    int vert, horiz, diag;
+    int min, cost, which;
+    int alignm_elem;
 
+    if ((i <= 0) && (j <= 0))
+    {
+        return 0;
+    }
+    if ((i > 0) && (j > 0))
+    {
+        horiz = dist[i][j - 1];
+        vert = dist[i - 1][j];
+        diag = dist[i - 1][j - 1];
+        min = min3(horiz, vert, diag);
+    }
+    else if (i > 0)
+    { // Boundary of the Edit Distance Matrix
+        horiz = -1;
+        vert = dist[i - 1][j];
+        diag = -1;
+        min = vert;
+    }
+    else if (j > 0)
+    { // Boundary of the Edit Distance Matrix
+        horiz = dist[i][j - 1];
+        vert = -1;
+        diag = -1;
+        min = horiz;
+    }
 
-	if ((i <= 0) && (j <= 0)) {
-		return 0;
-	}
-	if ((i > 0) && (j > 0)) {
-		horiz = dist[i][j - 1];
-		vert = dist[i - 1][j];
-		diag = dist[i - 1][j - 1];
-		min = min3(horiz, vert, diag);
-	} else if (i > 0) { // Boundary of the Edit Distance Matrix
-		horiz = -1;
-		vert = dist[i - 1][j];
-		diag = -1;
-		min = vert;
-	} else if (j > 0) { // Boundary of the Edit Distance Matrix
-		horiz = dist[i][j - 1];
-		vert = -1;
-		diag = -1;
-		min = horiz;
-	}
+    if ((min == diag) && (i > 0) && (j > 0))
+    {
+        if (dist[i - 1][j - 1] != dist[i][j])
+        {
+            cost = 1;
+            which = DIAGONAL;
+            j--;
+            i--;
+        }
+        else
+        {
+            cost = 0;
+            which = DIAGONAL;
+            j--;
+            i--;
+        }
+    }
+    else if (min == horiz)
+    {
+        which = HORIZONTAL;
+        if (dist[i][j - 1] != dist[i][j])
+            cost = 1;
+        else
+            cost = 0;
+        j--;
+    }
+    else if (min == vert)
+    {
+        which = VERTICAL;
+        if (dist[i - 1][j] != dist[i][j])
+            cost = 1;
+        else
+            cost = 0;
+        i--;
+    }
 
+    alignm_elem = __determine_alignment(i, j, alignment);
 
-	if ( (min == diag ) && (i > 0) && (j > 0)) {
-		if (dist[i - 1][j - 1] != dist[i][j]) {
-                        cost = 1;
-                        which = DIAGONAL;
-                        j--;
-                        i--;
-		} else {
-			cost = 0;
-			which = DIAGONAL;
-			j--;
-			i--;
-		}
-	} else if (min == horiz) {
-		which = HORIZONTAL;
-		if (dist[i][j - 1] != dist[i][j])
-			cost = 1;
-		else
-			cost = 0;
-		j--;
-	} else if (min == vert) {
-		which = VERTICAL;
-		if (dist[i - 1][j] != dist[i][j])
-			cost = 1;
-		else
-			cost = 0;
-		i--;
-	}
+    alignment[alignm_elem].type = which;
+    alignment[alignm_elem].cost = cost;
 
-	alignm_elem = __determine_alignment(i, j, alignment);
-
-	alignment[alignm_elem].type = which;
-	alignment[alignm_elem].cost = cost;
-
-// Some Debug Output ... Can be deleted
-/*	if( alignment[alignm_elem].type == HORIZONTAL)
+    // Some Debug Output ... Can be deleted
+    /*	if( alignment[alignm_elem].type == HORIZONTAL)
 		printf("HORIZONTAL \t Cost: %d i: %d  j: %d\n", alignment[alignm_elem].cost, i,j);
 	if( alignment[alignm_elem].type == VERTICAL)
 		printf("VERTICAL  \t Cost: %d  i: %d  j: %d\n", alignment[alignm_elem].cost, i,j);
 	if( alignment[alignm_elem].type == DIAGONAL)
 		printf("DIAGONAL  \t Cost: %d  i: %d  j: %d\n", alignment[alignm_elem].cost, i,j); */
 
-	return (++alignm_elem);
+    return (++alignm_elem);
 }
 
-int
-LevenshteinDistance(char *s, int m, char *t, int n)
+int LevenshteinDistance(char *s, int m, char *t, int n)
 {
-	//d is a table with m + 1 rows and n + 1 columns
-	int             i, j, cost, min;
+    //d is a table with m + 1 rows and n + 1 columns
+    int i, j, cost, min;
 
-        //retiled[0] = 0;
-	for (i = 0; i < m + 1; i++)
-		dist[i][0] = i;
-            //retiled[tiledIndex(i,0,ARRSIZE)] = i;
+    //retiled[0] = 0;
+    for (i = 0; i < m + 1; i++)
+        dist[i][0] = i;
+    //retiled[tiledIndex(i,0,ARRSIZE)] = i;
 
-	for (i = 0; i < n + 1; i++)
-		dist[0][i] = i;
-            //retiled[tiledIndex(0,i,ARRSIZE)] = i;
+    for (i = 0; i < n + 1; i++)
+        dist[0][i] = i;
+    //retiled[tiledIndex(0,i,ARRSIZE)] = i;
 
+    for (i = 1; i < m + 1; i++)
+        for (j = 1; j < n + 1; j++)
+        {
+            if (s[i - 1] == t[j - 1])
+                cost = 0;
+            else
+                cost = 1;
 
-	for (i = 1; i < m + 1; i++)
-		for (j = 1; j < n + 1; j++) {
-			if (s[i - 1] == t[j - 1])
-				cost = 0;
-			else
-				cost = 1;
+            dist[i][j] = min3(dist[i - 1][j] + 1, dist[i][j - 1] + 1, dist[i - 1][j - 1] + cost);
+            //retiled[tiledIndex(i,j,ARRSIZE)] = min3(retiled[tiledIndex(i - 1,j,ARRSIZE)] + 1,
+            //                                        retiled[tiledIndex(i,j - 1,ARRSIZE)] + 1,
+            //                                        retiled[tiledIndex(i - 1,j - 1,ARRSIZE)] + cost);
+        }
 
-			dist[i][j] = min3(dist[i - 1][j] + 1, dist[i][j - 1] + 1, dist[i - 1][j - 1] + cost);
-                        //retiled[tiledIndex(i,j,ARRSIZE)] = min3(retiled[tiledIndex(i - 1,j,ARRSIZE)] + 1,
-                        //                                        retiled[tiledIndex(i,j - 1,ARRSIZE)] + 1,
-                        //                                        retiled[tiledIndex(i - 1,j - 1,ARRSIZE)] + cost);
+    //printf("Edit Distance Matrix: \n\n");
+    //for (i = 0; i < m + 1; i++) {
+    //fprintf(outfileSequential, "Row %.4d\n", i);
+    //    for (j = 0; j < n + 1; j++) {
+    //	fprintf(outfileSequential,"[%d][%d] = %.4d\n", i, j, dist[i][j]);
+    //    }
+    //printf("\n");
+    //	}
+    //printf("\n\n");
+    printf("Value at [%.4d][%.4d] = %.4d\n", m, n, dist[m][n]);
 
-		}
-
-	//printf("Edit Distance Matrix: \n\n");
-	//for (i = 0; i < m + 1; i++) {
-            //fprintf(outfileSequential, "Row %.4d\n", i);
-        //    for (j = 0; j < n + 1; j++) {
-	//	fprintf(outfileSequential,"[%d][%d] = %.4d\n", i, j, dist[i][j]);
-        //    }
-            //printf("\n");
-//	}
-	//printf("\n\n");
-        printf("Value at [%.4d][%.4d] = %.4d\n",m,n,dist[m][n]);
-                
-	cost = dist[m][n];
-        //cost = retiled[tiledIndex(m,n,ARRSIZE)];
-	return cost;
+    cost = dist[m][n];
+    //cost = retiled[tiledIndex(m,n,ARRSIZE)];
+    return cost;
 }
 
-void parallelLevenshtein(char* s1, char* s2, int* &result, int size) {
+void parallelLevenshtein(char *s1, char *s2, int *&result, int size)
+{
     //Not really parallel
 
-    for(int i = 0; i <= ARRSIZE; ++i) //for each element in the first column
-        result[getIndex(i,0)] = i;
+    for (int i = 0; i <= ARRSIZE; ++i) //for each element in the first column
+        result[getIndex(i, 0)] = i;
 
     for (int i = 0; i <= ARRSIZE; i++)
-        result[getIndex(0,i)] = i;
+        result[getIndex(0, i)] = i;
 
     //int i = threadIdx.x + 1;  //column
     int Rprev[ARRSIZE];
     int Rs[ARRSIZE];
-    int* Rd = result;
-    for(int i = 0; i < ARRSIZE; ++i)
+    int *Rd = result;
+    for (int i = 0; i < ARRSIZE; ++i)
         Rprev[i] = Rs[i] = Rd[i];
 
-    int i;                    //column
-    int j;                    //row
+    int i; //column
+    int j; //row
 
-    for(int k = 2; k < (2 * size) - 1; ++k) {
-        for(int x = 0; x < 5; ++x) { //x serves as threadIdx.x
+    for (int k = 2; k < (2 * size) - 1; ++k)
+    {
+        for (int x = 0; x < 5; ++x)
+        { //x serves as threadIdx.x
             i = x + 1;
             //j = k - threadIdx.x;
             j = k - x - 1;
 
-            if( j > 0 && j < size)
+            if (j > 0 && j < size)
             {
                 //Rs[threadIdx.x] = MIN( (Rd[index(j, i - 1)] + 1),
                 //                       (Rprev[threadIdx.x] + 1) );
 
+                Rs[x] = MIN((Rd[getIndex(i, j - 1)] + 1),
+                            (Rd[getIndex(i - 1, j)] + 1));
+                Rd[getIndex(i, j)] = MIN((Rs[x]),
+                                         (Rd[getIndex(i - 1, j - 1)] + ((s1[i - 1] != s2[j - 1]) & 1)));
+                Rs[x] = Rd[getIndex(i, j)];
 
-                Rs[x]           = MIN( (Rd[getIndex(i  ,j-1)] + 1),
-                                       (Rd[getIndex(i-1,  j)] + 1)   );
-                Rd[getIndex(i,j)]  = MIN( (Rs[x]),
-                                       (Rd[getIndex(i-1,j-1)] + ((s1[i-1]!=s2[j-1])&1)) );
-                Rs[x] = Rd[getIndex(i,j)];
-                    
                 //Rd[index(j,i)]  = MIN( (Rs[threadIdx.x]),
                 //                       (Rd[index(j-1,i-1)] + ((Mds[i-1]==Nds[j-1])&1)) );
-            } else {
+            }
+            else
+            {
                 //printf("Thread %i, %i %i\n", x, i, j);
             }
 

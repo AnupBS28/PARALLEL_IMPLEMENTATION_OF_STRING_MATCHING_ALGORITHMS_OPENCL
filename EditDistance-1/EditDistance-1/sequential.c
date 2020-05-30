@@ -57,7 +57,7 @@ int main()
 	long sizea, sizeb;
 
 	infile1 = fopen("str1.txt", "r");
-	infile2 = fopen("str2.txt", "r");
+	infile2 = fopen("str1.txt", "r");
 
 	if (infile1 == NULL)
 	{
@@ -96,21 +96,24 @@ int main()
 	long int str1len = strlen(a);
 	long int str2len = strlen(b);
 
-	printf("%d %d %d %d\n", str1len, str2len, strlen(a), strlen(b));
+	// printf("%d %d %d %d\n", str1len, str2len, strlen(a), strlen(b));
 
-	
-
-	
-	
-	clock_t begin = clock();
+	double iterations=10;
+	double avg_serialTime=0;
+	for(int ii=0;ii<iterations;ii++){
+		clock_t begin = clock();
 
 	printf("%d \n", editDistDP(a, b, str1len, str2len));
 
 	clock_t end = clock();
 	double time_spent = 0.0;
 	time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-
+	avg_serialTime+=time_spent;
 	printf("\n\nEditDist() took %f seconds to execute \n\n", time_spent);
 
+	}
+	
+	printf("\n\nAveg serial exec time: %f \n",avg_serialTime/iterations);
+	
 	return 0;
 }
