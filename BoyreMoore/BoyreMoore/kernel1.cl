@@ -11,10 +11,10 @@ __kernel void search(__global char *inputText, __global char *searchPattern,
 
   int len = sublength;
 
-  int dlen = searchIndex[id * 2 + 1];
+  int dLength = searchIndex[id * 2 + 1];
   int i = searchIndex[id * 2] + len - 1;
 
-  while (i <= dlen) {
+  while (i <= dLength) {
     k = 0;
     while (k <= len - 1 && inputText[i - k] == searchPattern[len - 1 - k]) {
       k = k + 1;
