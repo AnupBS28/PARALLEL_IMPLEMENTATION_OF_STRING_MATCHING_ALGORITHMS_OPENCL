@@ -12,6 +12,7 @@
 
 int patternLength;
 
+//Serial implementation of the Boyer-Moore Algorithm
 int searchFirst(char searchWord[100], int sub)
 {
 	int i;
@@ -72,10 +73,12 @@ int main(int argc, char **argv)
 	int i = 0, j = 0, textLength;
 	int numberOfWords = 0;
 
+	// Read the input text file
 	std::ifstream ifs("inputEd.txt");
 	std::string str1((std::istreambuf_iterator<char>(ifs)),
 					 (std::istreambuf_iterator<char>()));
 
+	// Read the search pattern file
 	std::ifstream ifs2("input1Search.txt");
 	std::string str2((std::istreambuf_iterator<char>(ifs2)),
 					 (std::istreambuf_iterator<char>()));
@@ -147,16 +150,18 @@ int main(int argc, char **argv)
 	int *goodSymTab = (int *)malloc(sizeof(int) * (patternLength));
 	int badSymTab[128];
 
+	// Initialize the bad symbol table
 	for (i = 0; i <= 127; i++)
 	{
 		badSymTab[i] = patternLength;
 	}
-
+	// Fill the bad symbol table
 	for (i = 0; i <= patternLength - 2; i++)
 	{
 		badSymTab[(int)word[i]] = patternLength - 1 - i;
 	}
 
+	// Serial search for the pattern
 	for (k = 1; k <= patternLength - 1; k++)
 	{
 		sub = patternLength - k;
@@ -184,9 +189,12 @@ int main(int argc, char **argv)
 		}
 	}
 
+	//OpenCL Code
 	FILE *fp;
 	char *source_str;
 	size_t source_size;
+
+	//Open the kernel file
 	fp = fopen("kernel1.cl", "r");
 	if (!fp)
 	{
@@ -199,11 +207,13 @@ int main(int argc, char **argv)
 	fclose(fp);
 	double total_time = 0;
 
+	//Run the parallel code 10 times and calculate the average time
 	for (int testNum = 0; testNum < 10; testNum++)
 	{
 		cl_platform_id platform_id = NULL;
 		cl_device_id device_id = NULL;
 
+		//Get available platforms
 		cl_int ret = clGetPlatformIDs(1, &platform_id, NULL);
 		ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id,
 							 NULL);
@@ -215,6 +225,7 @@ int main(int argc, char **argv)
 
 		clock_t end;
 
+		// Create the OpenCL command queue
 		cl_command_queue command_queue = clCreateCommandQueue(context,
 															  device_id,
 															  NULL, &ret);
@@ -227,10 +238,8 @@ int main(int argc, char **argv)
 										   CL_MEM_READ_ONLY, patternLength * sizeof(int), NULL, &ret);
 		cl_mem bs_mem_obj = clCreateBuffer(context,
 										   CL_MEM_READ_ONLY, 128 * sizeof(int), NULL, &ret);
-
 		cl_mem se_mem_obj = clCreateBuffer(context,
 										   CL_MEM_READ_ONLY, (numberOfProcesses * 2) * sizeof(int), NULL, &ret);
-
 		cl_mem ans_mem_obj = clCreateBuffer(context,
 											CL_MEM_READ_WRITE, (numberOfProcesses) * sizeof(int), NULL, &ret);
 
@@ -245,9 +254,13 @@ int main(int argc, char **argv)
 		cl_program program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret);
 
 		ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+		//Begin the clock to calculate time consumed
 		clock_t begin = clock();
+
+		// Create the kernel read from the kernel file
 		cl_kernel kernel = clCreateKernel(program, "search", &ret);
 
+		//Pass the required arguments
 		ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&doc_mem_obj);
 		ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&k_mem_obj);
 		ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&se_mem_obj);
@@ -256,15 +269,22 @@ int main(int argc, char **argv)
 		ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), (void *)&bs_mem_obj);
 		ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void *)&sth);
 
+		// Set global item size and local item size for the GPU
 		size_t global_item_size = numberOfProcesses;
 		size_t local_item_size = 1;
 
 		cl_event event;
+
+		// Run the search kernel
 		ret = clEnqueueNDRangeKernel(command_queue, kernel, 1,
 									 NULL, &global_item_size, &local_item_size, 0, NULL, &event);
 
+		//Array to store the result of the search kernel
 		int ans[10];
+
+		//Read the kernel output int and
 		ret = clEnqueueReadBuffer(command_queue, ans_mem_obj, CL_TRUE, 0, numberOfProcesses * sizeof(int), ans, 0, NULL, NULL);
+		
 		end = clock();
 		double time_spent = 0.0;
 		time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -277,7 +297,8 @@ int main(int argc, char **argv)
 		std::cout << "Time Spent:" << time_spent;
 
 		clFlush(command_queue);
-
+		
+		//Free GPU Memory
 		ret = clReleaseKernel(kernel);
 		ret = clReleaseProgram(program);
 
