@@ -177,6 +177,7 @@ int main(int argc, char **argv)
 	char *a, *b;
 	char *program_log;
 
+	// Read the input text
 	infile1 = fopen("input.txt", "r");
 
 	if (infile1 == NULL)
@@ -206,9 +207,10 @@ int main(int argc, char **argv)
 	double total_time = 0;
 	int *sequential_array;
 	struct suffix *suffixes;
+
+	// Run the serial code 10 times and calculate the average time consumed
 	for (int testNum = 0; testNum < 10; testNum++)
 	{
-
 		suffixes = (struct suffix *)malloc(sizeof(struct suffix) * n);
 		begin = clock();
 		sequential_array = buildSuffixArray(txt, n);
@@ -227,6 +229,8 @@ int main(int argc, char **argv)
 	FILE *fp;
 	char *source_str;
 	size_t source_size;
+
+	//Read the kernel file
 	fp = fopen("kernel.cl", "r");
 	if (!fp)
 	{
@@ -243,6 +247,7 @@ int main(int argc, char **argv)
 
 	total_time = 0;
 
+	// Run the parallel suffix array construction 10 times and calculate average time consumed
 	for (int testNum = 0; testNum < 10; testNum++)
 	{
 		cl_int ret = clGetPlatformIDs(1, &platform_id, NULL);
@@ -345,18 +350,21 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 
+		// Load the init kernel
 		cl_kernel kernel = clCreateKernel(program, "init", &ret);
 		if (ret < 0)
 		{
 			printf("pm bn %d", ret);
 			exit(1);
 		}
+		// Load the rank_to_suffix kernel
 		cl_kernel rank_to_suffix = clCreateKernel(program, "rank_to_suffix", &ret);
 		if (ret < 0)
 		{
 			printf("pm bn2 %d", ret);
 			exit(1);
 		}
+		// Load the latter kernel
 		cl_kernel later = clCreateKernel(program, "later", &ret);
 		if (ret < 0)
 		{
@@ -364,6 +372,7 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 
+		// Load the mergesort kernel
 		m_MergesortGlobalSmallKernel = clCreateKernel(program, "Sort_MergesortGlobalSmall", &clError);
 		ret = clError;
 		m_MergesortGlobalBigKernel = clCreateKernel(program, "Sort_MergesortGlobalBig", &clError);
@@ -375,6 +384,8 @@ int main(int argc, char **argv)
 			printf("pm bn2 %d", ret);
 			exit(1);
 		}
+
+		// Set the kernel arguments
 		ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&m_suffixes);
 		ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&m_txt);
 		ret |= clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&m_n);
@@ -462,6 +473,8 @@ int main(int argc, char **argv)
 		int tik;
 		tik = 0;
 
+		//Compare the serial and parallel suffix arrays to see if the parallel implementation
+		// has generated the serial implementaions
 		for (int i = 0; i < n; i++)
 		{
 			if (suffixArr[i] != sequential_array[i])
